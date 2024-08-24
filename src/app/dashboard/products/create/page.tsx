@@ -31,7 +31,7 @@ import { productSchema } from "@/app/lib/zodSchemas";
 import { useState } from "react";
 
 import Image from "next/image";
-// import { categories } from "@/app/lib/categories";
+import { categories } from "@/app/lib/categories";
 import { SubmitButton } from "@/app/components/SubmitButtons";
 
 export default function ProductCreateRoute() {
@@ -148,11 +148,11 @@ export default function ProductCreateRoute() {
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* {categories.map((category) => (
+                  {categories.map((category) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.title}
                     </SelectItem>
-                  ))} */}
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-red-500">{fields.category.errors}</p>

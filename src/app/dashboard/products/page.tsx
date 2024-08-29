@@ -1,4 +1,4 @@
-// import prisma from "@/app/lib/db";
+"use server";
 import { Button } from "@/components/ui/button";
 import {
   Card,

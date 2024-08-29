@@ -2,8 +2,9 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { parseWithZod } from "@conform-to/zod";
-import { productSchema } from "./lib/zodSchemas";
+import { bannerSchema, productSchema } from "./lib/zodSchemas";
 import prisma from "./lib/db";
+import { UTApi } from "uploadthing/server";
 
 export async function createProduct(prevState: unknown, formData: FormData) {
   const { getUser } = getKindeServerSession();
@@ -77,4 +78,79 @@ export async function editProduct(prevState: any, formData: FormData) {
   });
 
   redirect("/dashboard/products");
+}
+
+export async function deleteProduct(formData: FormData) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+  const utapi = new UTApi();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return redirect("/");
+  }
+  // let product = await prisma.product.findFirst({
+  //   where: {
+  //     id: formData.get("productId") as string,
+  //   },
+  // });
+
+  // if (product) {
+  //   try {
+  //     await utapi.deleteFiles(product?.images);
+  //     console.log(product?.images);
+  //   } catch (error) {
+  //     console.error("UTAPI: Error deleting files", error);
+  //   }
+  // }
+
+  await prisma.product.delete({
+    where: {
+      id: formData.get("productId") as string,
+    },
+  });
+
+  redirect("/dashboard/products");
+}
+
+export async function createBanner(prevState: any, formData: FormData) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return redirect("/");
+  }
+
+  const submission = parseWithZod(formData, {
+    schema: bannerSchema,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+
+  await prisma.banner.create({
+    data: {
+      title: submission.value.title,
+      imageString: submission.value.imageString,
+    },
+  });
+
+  redirect("/dashboard/banner");
+}
+
+export async function deleteBanner(formData: FormData) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return redirect("/");
+  }
+
+  await prisma.banner.delete({
+    where: {
+      id: formData.get("bannerId") as string,
+    },
+  });
+
+  redirect("/dashboard/banner");
 }

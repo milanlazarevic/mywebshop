@@ -1,3 +1,4 @@
+"use server";
 import { EditForm } from "@/app/components/dashboard/EditForm";
 import prisma from "@/app/lib/db";
 import { notFound } from "next/navigation";

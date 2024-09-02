@@ -5,6 +5,11 @@ import { parseWithZod } from "@conform-to/zod";
 import { bannerSchema, productSchema } from "./lib/zodSchemas";
 import prisma from "./lib/db";
 import { UTApi } from "uploadthing/server";
+import { redis } from "./lib/redis";
+import { Cart } from "./lib/interfaces";
+import { revalidatePath } from "next/cache";
+import { stripe } from "./lib/stripe";
+import Stripe from "stripe";
 
 export async function createProduct(prevState: unknown, formData: FormData) {
   const { getUser } = getKindeServerSession();
@@ -155,70 +160,138 @@ export async function deleteBanner(formData: FormData) {
   redirect("/dashboard/banner");
 }
 
-// export async function addItem(productId: string) {
-//   const { getUser } = getKindeServerSession();
-//   const user = await getUser();
+export async function addItem(productId: string) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
 
-//   if (!user) {
-//     return redirect("/");
-//   }
+  if (!user) {
+    return redirect("/");
+  }
 
-//   let cart: Cart | null = await redis.get(`cart-${user.id}`);
+  let cart: Cart | null = await redis.get(`cart-${user.id}`);
 
-//   const selectedProduct = await prisma.product.findUnique({
-//     select: {
-//       id: true,
-//       name: true,
-//       price: true,
-//       images: true,
-//     },
-//     where: {
-//       id: productId,
-//     },
-//   });
+  const selectedProduct = await prisma.product.findUnique({
+    where: {
+      id: productId,
+    },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      images: true,
+    },
+  });
 
-//   if (!selectedProduct) {
-//     throw new Error("No product with this id");
-//   }
-//   let myCart = {} as Cart;
+  if (!selectedProduct) {
+    throw new Error("No product with this id!");
+  }
 
-//   if (!cart || !cart.items) {
-//     myCart = {
-//       userId: user.id,
-//       items: [
-//         {
-//           price: selectedProduct.price,
-//           id: selectedProduct.id,
-//           imageString: selectedProduct.images[0],
-//           name: selectedProduct.name,
-//           quantity: 1,
-//         },
-//       ],
-//     };
-//   } else {
-//     let itemFound = false;
+  let myCart = {} as Cart;
 
-//     myCart.items = cart.items.map((item) => {
-//       if (item.id === productId) {
-//         itemFound = true;
-//         item.quantity += 1;
-//       }
+  if (!cart || !cart.items) {
+    myCart = {
+      userId: user.id,
+      items: [
+        {
+          price: selectedProduct.price,
+          id: selectedProduct.id,
+          imageString: selectedProduct.images[0],
+          name: selectedProduct.name,
+          quantity: 1,
+        },
+      ],
+    };
+  } else {
+    let itemFound = false;
 
-//       return item;
-//     });
+    myCart.items = cart.items.map((item) => {
+      if (item.id === productId) {
+        itemFound = true;
+        item.quantity += 1;
+      }
+      return item;
+    });
 
-//     if (!itemFound) {
-//       myCart.items.push({
-//         id: selectedProduct.id,
-//         imageString: selectedProduct.images[0],
-//         name: selectedProduct.name,
-//         price: selectedProduct.price,
-//         quantity: 1,
-//       });
-//     }
-//   }
+    if (!itemFound) {
+      myCart.items.push({
+        id: selectedProduct.id,
+        imageString: selectedProduct.images[0],
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        quantity: 1,
+      });
+    }
+  }
+  console.log("ovo je korpa", myCart);
+  await redis.set(`cart-${user.id}`, myCart);
 
-//   await redis.set(`cart-${user.id}`, myCart);
+  revalidatePath("/", "layout");
+}
 
-//   revalidatePath("/", "layout");
-// }
+export async function delItem(formData: FormData) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user) {
+    return redirect("/");
+  }
+
+  const productId = formData.get("productId");
+
+  let cart: Cart | null = await redis.get(`cart-${user.id}`);
+
+  if (cart && cart.items) {
+    const updateCart: Cart = {
+      userId: user.id,
+      items: cart.items.filter((item) => item.id !== productId),
+    };
+
+    await redis.set(`cart-${user.id}`, updateCart);
+  }
+
+  revalidatePath("/bag");
+}
+
+export async function checkOut() {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user) {
+    return redirect("/");
+  }
+
+  let cart: Cart | null = await redis.get(`cart-${user.id}`);
+
+  if (cart && cart.items) {
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+      cart.items.map((item) => ({
+        price_data: {
+          currency: "usd",
+          unit_amount: item.price * 100,
+          product_data: {
+            name: item.name,
+            images: [item.imageString],
+          },
+        },
+        quantity: item.quantity,
+      }));
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      line_items: lineItems,
+      success_url:
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000/payment/success"
+          : "https://shoe-marshal.vercel.app/payment/success",
+      cancel_url:
+        process.env.NODE_ENV === "development"
+          ? "http://localhost:3000/payment/cancel"
+          : "https://shoe-marshal.vercel.app/payment/cancel",
+      metadata: {
+        userId: user.id,
+      },
+    });
+
+    return redirect(session.url as string);
+  }
+}

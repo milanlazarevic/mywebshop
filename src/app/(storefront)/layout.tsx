@@ -10,7 +10,10 @@ export default function StoreFrontLayout({
   return (
     <div className="relative min-h-screen">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex-1">
+      <main
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 
+                     flex-1 h-full min-h-[calc(100vh-17rem)]"
+      >
         {children}
       </main>
       <Footer />

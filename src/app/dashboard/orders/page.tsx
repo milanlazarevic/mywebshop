@@ -41,7 +41,7 @@ async function getData() {
 }
 
 export default async function OrdersPage() {
-  //   noStore();
+  noStore();
   const data = await getData();
   return (
     <Card>

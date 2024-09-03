@@ -1,9 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function SuccessRoute() {
+export default async function SuccessRoute() {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/");
+  }
   return (
     <section className="w-full min-h-[80vh] flex items-center justify-center">
       <Card className="w-[350px]">

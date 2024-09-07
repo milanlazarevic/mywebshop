@@ -163,7 +163,7 @@ export async function deleteBanner(formData: FormData) {
 export async function addItem(productId: string) {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
-
+  console.log("pokrenuh");
   if (!user) {
     return redirect("/");
   }

@@ -1,10 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -80,11 +77,12 @@ export default function MenuDropdown({
               {item.name}
             </Link>
           ))}
-          {total ? (
+          {total !== null && email ? (
             <Button
               variant={"default"}
               onClick={() => setOpen(false)}
               className="mt-4"
+              asChild
             >
               <Link
                 href="/bag"

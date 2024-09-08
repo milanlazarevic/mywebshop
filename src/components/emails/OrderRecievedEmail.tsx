@@ -31,6 +31,7 @@ const OrderRecievedEmail = ({
     <Html>
       <Head />
       <Preview>Your order summary and estimated delivery date</Preview>
+      {/* eslint-disable react/no-unescaped-entities */}
       <Body style={main}>
         <Container style={container}>
           <Section style={message}>
@@ -96,6 +97,7 @@ const OrderRecievedEmail = ({
               <Text style={footer.text}>
                 © CaseCobra, Inc. All Rights Reserved.
               </Text>
+              {/* eslint-enable react/no-unescaped-entities */}
             </Row>
           </Section>
         </Container>

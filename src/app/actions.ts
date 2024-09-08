@@ -163,7 +163,7 @@ export async function deleteBanner(formData: FormData) {
 export async function addItem(productId: string) {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
-  console.log("pokrenuh");
+  // console.log("pokrenuh");
   if (!user) {
     return redirect("/");
   }
@@ -222,7 +222,7 @@ export async function addItem(productId: string) {
       });
     }
   }
-  console.log("ovo je korpa", myCart);
+  // console.log("ovo je korpa", myCart);
   await redis.set(`cart-${user.id}`, myCart);
 
   revalidatePath("/", "layout");
@@ -278,6 +278,8 @@ export async function checkOut() {
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      payment_method_types: ["card", "paypal"],
+      shipping_address_collection: { allowed_countries: ["DE", "US", "BH"] },
       line_items: lineItems,
       success_url:
         process.env.NODE_ENV === "development"
@@ -291,7 +293,7 @@ export async function checkOut() {
         userId: user.id,
       },
     });
-
+    // console.log("sesija", session);
     return redirect(session.url as string);
   }
 }

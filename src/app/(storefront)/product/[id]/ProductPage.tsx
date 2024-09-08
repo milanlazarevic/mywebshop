@@ -25,7 +25,7 @@ const ProductPage = ({
 }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const addProducttoShoppingCart = () => {
-    console.log(user);
+    // console.log(user);
     if (!user) {
       // need to log in
       localStorage.setItem("product-id", data.id);

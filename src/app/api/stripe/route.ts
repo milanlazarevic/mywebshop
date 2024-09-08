@@ -5,15 +5,15 @@ import { stripe } from "@/app/lib/stripe";
 import { headers } from "next/headers";
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
-// import OrderRecievedEmail from "@/components/emails/OrderRecievedEmail";
+import OrderRecievedEmail from "@/components/emails/OrderRecievedEmail";
 
-// const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
     const body = await req.text();
     const signature = headers().get("stripe-signature") as string;
-    console.log("Opuco sam");
+    console.log("Opuco sam iz puske");
     if (!signature) {
       return new Response("Invalid signature!", { status: 400 });
     }
@@ -33,7 +33,6 @@ export async function POST(req: Request) {
 
         const billingAdress = session.customer_details!.address;
         const shippingAddress = session.shipping_details!.address;
-        console.log(session, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         // destructure metadata that you set in preview page in actions.ts when creating stripe session {userId, orderID}
         const { userId, orderId } = session.metadata || {
           userId: null,
@@ -75,29 +74,33 @@ export async function POST(req: Request) {
             } as any,
           },
         });
-        console.log(createdOrder);
 
         await redis.del(`cart-${session.metadata?.userId}`);
 
         // send email
-        // await resend.emails.send({
-        //   from: "KnedlaShop <mlazarevic662@gmail.com>",
-        //   to: [event.data.object.customer_details.email],
-        //   subject: "Thanks for your order!",
-        //   react: OrderRecievedEmail({
-        //     orderId: createdOrder.id,
-        //     orderDate: createdOrder.createdAt.toLocaleDateString(),
-        //     // @ts-ignore
-        //     shippingAddress: {
-        //       name: session.customer_details!.name!,
-        //       city: shippingAddress!.city!,
-        //       country: shippingAddress!.country!,
-        //       postalCode: shippingAddress!.postal_code!,
-        //       state: shippingAddress!.state!,
-        //       street: shippingAddress!.line1!,
-        //     },
-        //   }),
-        // });
+        const { data, error } = await resend.emails.send({
+          from: "KnedlaShop <mlazarevic662@resend.dev>",
+          to: [event.data.object.customer_details.email],
+          subject: "Thanks for your order!",
+          react: OrderRecievedEmail({
+            orderId: createdOrder.id,
+            orderDate: createdOrder.createdAt.toLocaleDateString(),
+            // @ts-ignore
+            shippingAddress: {
+              name: session.customer_details!.name!,
+              city: shippingAddress!.city!,
+              country: shippingAddress!.country!,
+              postalCode: shippingAddress!.postal_code!,
+              state: shippingAddress!.state!,
+              street: shippingAddress!.line1!,
+            },
+          }),
+        });
+        console.log(event.data.object.customer_details.email, "gdje si poslo");
+        console.log(error, data);
+        if (error) {
+          return new Response(null, { status: 400 });
+        }
         break;
       }
       default: {

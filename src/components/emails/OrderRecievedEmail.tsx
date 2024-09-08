@@ -36,10 +36,10 @@ const OrderRecievedEmail = ({
         <Container style={container}>
           <Section style={message}>
             <Img
-              src={`${baseUrl}/snake-3.png`}
+              src={`${baseUrl}/logo.png`}
               width="65"
               height="73"
-              alt="delivery snake"
+              alt="logo"
               style={{ margin: "auto" }}
             />
             <Heading style={global.heading}>Thank you for your order!</Heading>
@@ -95,7 +95,7 @@ const OrderRecievedEmail = ({
             </Row>
             <Row>
               <Text style={footer.text}>
-                © CaseCobra, Inc. All Rights Reserved.
+                © KnedlaShop, Inc. All Rights Reserved.
               </Text>
               {/* eslint-enable react/no-unescaped-entities */}
             </Row>

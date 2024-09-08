@@ -37,8 +37,8 @@ const OrderRecievedEmail = ({
           <Section style={message}>
             <Img
               src={`${baseUrl}/logo.png`}
-              width="65"
-              height="73"
+              width="212"
+              height="66"
               alt="logo"
               style={{ margin: "auto" }}
             />

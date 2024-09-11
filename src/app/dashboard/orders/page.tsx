@@ -31,6 +31,15 @@ async function getData() {
           profileImage: true,
         },
       },
+      shippingAddress: {
+        select: {
+          country: true,
+          city: true,
+          postalCode: true,
+          street: true,
+          phoneNumber: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -54,9 +63,11 @@ export default async function OrdersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Customer</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Shipping Details</TableHead>
+              <TableHead>Contact</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
+
               <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
@@ -69,7 +80,17 @@ export default async function OrdersPage() {
                     {item.User?.email}
                   </p>
                 </TableCell>
-                <TableCell>Order</TableCell>
+                <TableCell>
+                  <p className="font-medium">
+                    {item.shippingAddress?.country},{" "}
+                    {item.shippingAddress?.city},{" "}
+                    {item.shippingAddress?.postalCode}
+                  </p>
+                  <p className="hidden md:flex text-sm text-muted-foreground">
+                    {item.shippingAddress?.street}
+                  </p>
+                </TableCell>
+                <TableCell>{item.shippingAddress?.phoneNumber}</TableCell>
                 <TableCell>{item.status}</TableCell>
                 <TableCell>
                   {new Intl.DateTimeFormat("en-US").format(item.createdAt)}

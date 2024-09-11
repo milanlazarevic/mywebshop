@@ -60,6 +60,7 @@ export async function POST(req: Request) {
                 postalCode: shippingAddress!.postal_code!,
                 state: shippingAddress!.state! ?? "",
                 street: shippingAddress!.line1!,
+                phoneNumber: session.customer_details?.phone,
               },
             } as any,
             billingAddress: {

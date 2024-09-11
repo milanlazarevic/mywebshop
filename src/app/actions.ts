@@ -280,6 +280,7 @@ export async function checkOut() {
       mode: "payment",
       payment_method_types: ["card", "paypal"],
       shipping_address_collection: { allowed_countries: ["DE", "US", "BH"] },
+      phone_number_collection: { enabled: true },
       line_items: lineItems,
       success_url:
         process.env.NODE_ENV === "development"

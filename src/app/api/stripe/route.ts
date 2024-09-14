@@ -39,11 +39,14 @@ export async function POST(req: Request) {
           orderId: null,
         };
         // TODO: when you add orderId in the bag file than add || orderId
-        if (!userId) {
+        if (!userId || !orderId) {
           throw new Error("Invalid request metadata!");
         }
 
-        const createdOrder = await prisma.order.create({
+        const createdOrder = await prisma.order.update({
+          where: {
+            id: orderId,
+          },
           data: {
             amount: session.amount_total as number,
             status: session.status as string,
@@ -74,6 +77,14 @@ export async function POST(req: Request) {
               },
             } as any,
           },
+          include: {
+            OrderedProducts: {
+              select: {
+                quantity: true,
+                product: true,
+              },
+            },
+          },
         });
 
         await redis.del(`cart-${session.metadata?.userId}`);
@@ -95,6 +106,7 @@ export async function POST(req: Request) {
               state: shippingAddress!.state!,
               street: shippingAddress!.line1!,
             },
+            orderedProducts: createdOrder.OrderedProducts,
           }),
         });
         console.log(event.data.object.customer_details.email, "gdje si poslo");

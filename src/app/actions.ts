@@ -10,6 +10,7 @@ import { Cart } from "./lib/interfaces";
 import { revalidatePath } from "next/cache";
 import { stripe } from "./lib/stripe";
 import Stripe from "stripe";
+import { KindeUser } from "@kinde-oss/kinde-auth-nextjs/types";
 
 export async function createProduct(prevState: unknown, formData: FormData) {
   const { getUser } = getKindeServerSession();
@@ -276,6 +277,8 @@ export async function checkOut() {
         quantity: item.quantity,
       }));
 
+    let orderId = await createOrder(cart, user);
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card", "paypal"],
@@ -292,9 +295,33 @@ export async function checkOut() {
           : "https://mywebshop-beta.vercel.app/payment/cancel",
       metadata: {
         userId: user.id,
+        orderId: orderId,
       },
     });
-    // console.log("sesija", session);
     return redirect(session.url as string);
   }
+}
+async function createOrder(cart: Cart, user: KindeUser) {
+  let totalPrice = cart.items.reduce((accumulator, currentValue) => {
+    return accumulator + currentValue.price * currentValue.quantity;
+  }, 0);
+  let order = await prisma.order.create({
+    data: {
+      User: {
+        connect: {
+          id: user.id,
+        },
+      },
+      amount: totalPrice * 100,
+      OrderedProducts: {
+        create: cart.items.map((item) => ({
+          product: {
+            connect: { id: item.id },
+          },
+          quantity: item.quantity,
+        })),
+      },
+    },
+  });
+  return order.id;
 }

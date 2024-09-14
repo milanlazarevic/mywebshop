@@ -12,16 +12,23 @@ import {
   Section,
   Text,
 } from "@react-email/components";
-import { ShippingAddress } from "@prisma/client";
+import { OrderProduct, Product, ShippingAddress } from "@prisma/client";
+
+interface iOrderedProducts {
+  product: Product;
+  quantity: number;
+}
 
 const OrderRecievedEmail = ({
   shippingAddress,
   orderId,
   orderDate,
+  orderedProducts,
 }: {
   shippingAddress: ShippingAddress;
   orderId: string;
   orderDate: string;
+  orderedProducts: iOrderedProducts[];
 }) => {
   const baseUrl =
     process.env.NODE_ENV === "development"
@@ -69,6 +76,35 @@ const OrderRecievedEmail = ({
           <Section style={global.defaultPadding}>
             <Row style={{ display: "inline-flex gap-16", marginBottom: 40 }}>
               <Column style={{ width: 170 }}>
+                <Text style={global.paragraphWithBold}>
+                  Here's what you get:
+                </Text>
+                {orderedProducts.map((item) => (
+                  <>
+                    <Row style={{ marginBottom: 20 }}>
+                      <Column style={{ width: 200 }}>
+                        <Text style={track.number}>{item.product.name}</Text>
+                        <Text>{item.quantity}x</Text>
+                      </Column>
+                      <Column style={{ marginLeft: 20, float: "right" }}>
+                        <Img
+                          src={item.product.images[0]}
+                          width={200}
+                          height={200}
+                          alt="Product image"
+                        />
+                      </Column>
+                    </Row>
+                    <Hr style={global.hr} />
+                  </>
+                ))}
+              </Column>
+            </Row>
+          </Section>
+          <Hr style={global.hr} />
+          <Section style={global.defaultPadding}>
+            <Row style={{ display: "inline-flex gap-16", marginBottom: 40 }}>
+              <Column style={{ width: 170 }}>
                 <Text style={global.paragraphWithBold}>Order Number</Text>
                 <Text style={track.number}>{orderId}</Text>
               </Column>
@@ -78,8 +114,6 @@ const OrderRecievedEmail = ({
               </Column>
             </Row>
           </Section>
-
-          <Hr style={global.hr} />
           <Section style={paddingY}>
             <Row>
               <Text

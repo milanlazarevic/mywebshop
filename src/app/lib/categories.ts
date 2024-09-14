@@ -1,17 +1,12 @@
 export const categories = [
   {
     id: 0,
-    title: "Men",
-    name: "men",
+    title: "Artwork",
+    name: "artwork",
   },
   {
     id: 1,
-    title: "Women",
-    name: "women",
-  },
-  {
-    id: 3,
-    title: "Kids",
-    name: "kids",
+    title: "Canvas print",
+    name: "canvas_print",
   },
 ];

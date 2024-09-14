@@ -98,9 +98,8 @@ enum ProductStatus {
 }
 
 enum Category {
-  men 
-  women
-  kids
+  artwork 
+  canvas_print
 }
 
 model Banner {

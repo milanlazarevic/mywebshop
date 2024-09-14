@@ -17,18 +17,13 @@ export const navbarLinks = [
   },
   {
     id: 2,
-    name: "Men",
-    href: "/products/men",
+    name: "Canvas prints",
+    href: "/products/canvas_prints",
   },
   {
     id: 3,
-    name: "Women",
-    href: "/products/women",
-  },
-  {
-    id: 4,
-    name: "Kids",
-    href: "/products/kids",
+    name: "Artwork",
+    href: "/products/artwork",
   },
 ];
 

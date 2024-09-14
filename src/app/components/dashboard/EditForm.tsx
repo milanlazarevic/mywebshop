@@ -47,7 +47,7 @@ interface iAppProps {
   };
 }
 
-export async function EditForm({ data }: iAppProps) {
+export function EditForm({ data }: iAppProps) {
   const [images, setImages] = useState<string[]>(data.images);
   const [lastResult, action] = useFormState(editProduct, undefined);
   const [form, fields] = useForm({

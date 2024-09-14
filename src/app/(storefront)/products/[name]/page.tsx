@@ -24,11 +24,11 @@ async function getData(productCategory: string) {
         data: data,
       };
     }
-    case "men": {
+    case "artwork": {
       const data = await prisma.product.findMany({
         where: {
           status: "published",
-          category: "men",
+          category: "artwork",
         },
         select: {
           name: true,
@@ -40,15 +40,15 @@ async function getData(productCategory: string) {
       });
 
       return {
-        title: "Products for Men",
+        title: "Artwork products",
         data: data,
       };
     }
-    case "women": {
+    case "canvas_prints": {
       const data = await prisma.product.findMany({
         where: {
           status: "published",
-          category: "women",
+          category: "canvas_print",
         },
         select: {
           name: true,
@@ -60,27 +60,7 @@ async function getData(productCategory: string) {
       });
 
       return {
-        title: "Products to Women",
-        data: data,
-      };
-    }
-    case "kids": {
-      const data = await prisma.product.findMany({
-        where: {
-          status: "published",
-          category: "kids",
-        },
-        select: {
-          name: true,
-          images: true,
-          price: true,
-          id: true,
-          description: true,
-        },
-      });
-
-      return {
-        title: "Products for Kids",
+        title: "Canvas print products",
         data: data,
       };
     }

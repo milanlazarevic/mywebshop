@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ChevronDown } from "lucide-react";
 import { unstable_noStore as noStore } from "next/cache";
+import OrdersTable from "./OrdersTable";
 
 async function getData() {
   const data = await prisma.order.findMany({
@@ -40,6 +42,12 @@ async function getData() {
           phoneNumber: true,
         },
       },
+      OrderedProducts: {
+        select: {
+          product: true,
+          quantity: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -52,57 +60,5 @@ async function getData() {
 export default async function OrdersPage() {
   noStore();
   const data = await getData();
-  return (
-    <Card>
-      <CardHeader className="px-7">
-        <CardTitle>Orders</CardTitle>
-        <CardDescription>Recent orders from your store!</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Customer</TableHead>
-              <TableHead>Shipping Details</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <p className="font-medium">{item.User?.firstName}</p>
-                  <p className="hidden md:flex text-sm text-muted-foreground">
-                    {item.User?.email}
-                  </p>
-                </TableCell>
-                <TableCell>
-                  <p className="font-medium">
-                    {item.shippingAddress?.country},{" "}
-                    {item.shippingAddress?.city},{" "}
-                    {item.shippingAddress?.postalCode}
-                  </p>
-                  <p className="hidden md:flex text-sm text-muted-foreground">
-                    {item.shippingAddress?.street}
-                  </p>
-                </TableCell>
-                <TableCell>{item.shippingAddress?.phoneNumber}</TableCell>
-                <TableCell>{item.status}</TableCell>
-                <TableCell>
-                  {new Intl.DateTimeFormat("en-US").format(item.createdAt)}
-                </TableCell>
-                <TableCell className="text-right">
-                  ${new Intl.NumberFormat("en-US").format(item.amount / 100)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
+  return <OrdersTable orders={data} />;
 }

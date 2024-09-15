@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { placeOrder } from "@/app/actions";
 import { Product } from "@prisma/client";
 import { SubmitButton } from "@/app/components/SubmitButtons";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 export interface iOrder {
   id: string;
@@ -36,8 +38,18 @@ export interface iOrder {
 
 export default function PreviewPage({ order }: { order: iOrder }) {
   return (
-    <div className="container mx-auto p-6">
-      <Card className="mx-auto">
+    <div className="container mx-auto">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" asChild>
+          <Link href="/bag">
+            <ChevronLeft className="w-4 h-4" />
+          </Link>
+        </Button>
+        <h1 className="text-xl font-semibold tracking-tight">
+          Congratulations, almost there!
+        </h1>
+      </div>
+      <Card className="mx-auto mt-5">
         <CardHeader>
           <CardTitle>Order Preview</CardTitle>
         </CardHeader>

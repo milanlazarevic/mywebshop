@@ -2,7 +2,11 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { parseWithZod } from "@conform-to/zod";
-import { bannerSchema, productSchema } from "./lib/zodSchemas";
+import {
+  bannerSchema,
+  productSchema,
+  shippingAddressSchema,
+} from "./lib/zodSchemas";
 import prisma from "./lib/db";
 import { UTApi } from "uploadthing/server";
 import { redis } from "./lib/redis";
@@ -11,6 +15,63 @@ import { revalidatePath } from "next/cache";
 import { stripe } from "./lib/stripe";
 import Stripe from "stripe";
 import { KindeUser } from "@kinde-oss/kinde-auth-nextjs/types";
+import OrderRecievedEmail from "@/components/emails/OrderRecievedEmail";
+import { Resend } from "resend";
+import { iOrder } from "./(storefront)/preview/[id]/PreviewPage";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export async function createShippingAddress(
+  orderId: string | undefined,
+  prevState: unknown,
+  formData: FormData
+) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user || user.email !== process.env.ADMIN_EMAIL || !orderId) {
+    return redirect("/");
+  }
+
+  const submission = parseWithZod(formData, {
+    schema: shippingAddressSchema,
+  });
+
+  if (submission.status !== "success") {
+    return submission.reply();
+  }
+  await prisma.order.update({
+    where: {
+      id: orderId,
+    },
+    data: {
+      shippingAddress: {
+        create: {
+          name: submission.value.firstName + submission.value.lastName,
+          city: submission.value.city,
+          country: submission.value.country,
+          postalCode: submission.value.postalCode.toString(),
+          state: "RS",
+          street: submission.value.address,
+          phoneNumber: submission.value.phoneNumber,
+        },
+      },
+      billingAddress: {
+        create: {
+          name: submission.value.firstName + submission.value.lastName,
+          city: submission.value.city,
+          country: submission.value.country,
+          postalCode: submission.value.postalCode.toString(),
+          state: "RS",
+          street: submission.value.address,
+          phoneNumber: submission.value.phoneNumber,
+        },
+      },
+    },
+  });
+
+  redirect(`/preview/${orderId}`);
+}
 
 export async function createProduct(prevState: unknown, formData: FormData) {
   const { getUser } = getKindeServerSession();
@@ -279,28 +340,85 @@ export async function checkOut() {
 
     let orderId = await createOrder(cart, user);
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card", "paypal"],
-      shipping_address_collection: { allowed_countries: ["DE", "US", "BH"] },
-      phone_number_collection: { enabled: true },
-      line_items: lineItems,
-      success_url:
-        process.env.NODE_ENV === "development"
-          ? "http://localhost:3000/payment/success"
-          : "https://mywebshop-beta.vercel.app/payment/success",
-      cancel_url:
-        process.env.NODE_ENV === "development"
-          ? "http://localhost:3000/payment/cancel"
-          : "https://mywebshop-beta.vercel.app/payment/cancel",
-      metadata: {
-        userId: user.id,
-        orderId: orderId,
-      },
-    });
-    return redirect(session.url as string);
+    // const session = await stripe.checkout.sessions.create({
+    //   mode: "payment",
+    //   payment_method_types: ["card", "paypal"],
+    //   shipping_address_collection: { allowed_countries: ["DE", "US", "BH"] },
+    //   phone_number_collection: { enabled: true },
+    //   line_items: lineItems,
+    //   success_url:
+    //     process.env.NODE_ENV === "development"
+    //       ? "http://localhost:3000/payment/success"
+    //       : "https://mywebshop-beta.vercel.app/payment/success",
+    //   cancel_url:
+    //     process.env.NODE_ENV === "development"
+    //       ? "http://localhost:3000/payment/cancel"
+    //       : "https://mywebshop-beta.vercel.app/payment/cancel",
+    //   metadata: {
+    //     userId: user.id,
+    //     orderId: orderId,
+    //   },
+    // });
+    return redirect(`checkout/${orderId}`);
   }
 }
+
+export async function placeOrder(order: iOrder) {
+  const { getUser } = getKindeServerSession();
+  const user = await getUser();
+
+  if (!user || !user.email) {
+    return redirect("/");
+  }
+  await prisma.order.update({
+    where: {
+      id: order.id,
+    },
+    data: {
+      status: "completed",
+    },
+  });
+
+  let cart: Cart | null = await redis.get(`cart-${user.id}`);
+
+  // DELETE THE CART
+  await redis.del(`cart-${user.id}`);
+
+  // SEND EMAIL
+  const { data, error } = await resend.emails.send({
+    from: "KnedlaShop <mlazarevic662@resend.dev>",
+    to: [user.email],
+    subject: "Thanks for your order!",
+    react: OrderRecievedEmail({
+      orderId: order.id,
+      orderDate: order.createdAt.toLocaleDateString(),
+      // @ts-ignore
+      shippingAddress: {
+        name: order.shippingAddress!.name,
+        city: order.shippingAddress!.city,
+        country: order.shippingAddress!.country,
+        postalCode: order.shippingAddress!.postalCode,
+        state: order.shippingAddress!.state,
+        street: order.shippingAddress!.street,
+      },
+      orderedProducts: order.OrderedProducts,
+    }),
+  });
+  // console.log(event.data.object.customer_details.email, "gdje si poslo");
+  // console.log(error, data);
+  if (error) {
+    if (process.env.NODE_ENV === "development") {
+      return redirect("http://localhost:3000/payment/cancel");
+    } else {
+      return redirect("https://mywebshop-beta.vercel.app/payment/cancel");
+    }
+  }
+
+  return process.env.NODE_ENV === "development"
+    ? redirect("http://localhost:3000/payment/success")
+    : redirect("https://mywebshop-beta.vercel.app/payment/success");
+}
+
 async function createOrder(cart: Cart, user: KindeUser) {
   let totalPrice = cart.items.reduce((accumulator, currentValue) => {
     return accumulator + currentValue.price * currentValue.quantity;

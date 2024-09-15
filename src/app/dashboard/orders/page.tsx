@@ -1,21 +1,5 @@
 // import prisma from "@/app/lib/db";
 import prisma from "@/app/lib/db";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ChevronDown } from "lucide-react";
 import { unstable_noStore as noStore } from "next/cache";
 import OrdersTable from "./OrdersTable";
 

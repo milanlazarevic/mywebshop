@@ -14,3 +14,13 @@ export const bannerSchema = z.object({
   title: z.string(),
   imageString: z.string(),
 });
+
+export const shippingAddressSchema = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  address: z.string(),
+  city: z.string(),
+  postalCode: z.number().min(1000),
+  country: z.enum(["BIH", "SRB"]),
+  phoneNumber: z.string().regex(/^[0-9/+-]+$/),
+});

@@ -15,6 +15,14 @@ interface iProduct {
   price: number;
   images: string[];
 }
+const formatDescription = (description: string) => {
+  return description.split(/\r?\n/).map((line, index) => (
+    <span key={index}>
+      {line}
+      <br />
+    </span>
+  ));
+};
 
 const ProductPage = ({
   user,
@@ -35,6 +43,7 @@ const ProductPage = ({
       // addItem.bind(null, data.id);
     }
   };
+  console.log(data.description);
   return (
     <>
       <LoginModal isOpen={isLoginModalOpen} setIsOpen={setIsLoginModalOpen} />
@@ -52,7 +61,9 @@ const ProductPage = ({
             <StarIcon className="h-4 w-4 text-yellow-500 fill-yellow-500" />
             <StarIcon className="h-4 w-4 text-yellow-500 fill-yellow-500" />
           </div>
-          <p className="text-base text-gray-700 mt-6">{data.description}</p>
+          <p className="text-base text-gray-700 mt-6 whitespace-pre-wrap">
+            {formatDescription(data.description)}
+          </p>
 
           <form action={addProducttoShoppingCart}>
             <ShoppingBagButton />

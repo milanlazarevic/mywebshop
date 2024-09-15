@@ -34,7 +34,6 @@ export default async function OrderPreview({
 }) {
   noStore();
   const order = await getData(params.id);
-  console.log(order);
 
   return <PreviewPage order={order} />;
 }

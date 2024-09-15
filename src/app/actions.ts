@@ -225,7 +225,6 @@ export async function deleteBanner(formData: FormData) {
 export async function addItem(productId: string) {
   const { getUser } = getKindeServerSession();
   const user = await getUser();
-  // console.log("pokrenuh");
   if (!user) {
     return redirect("/");
   }
@@ -284,7 +283,6 @@ export async function addItem(productId: string) {
       });
     }
   }
-  // console.log("ovo je korpa", myCart);
   await redis.set(`cart-${user.id}`, myCart);
 
   revalidatePath("/", "layout");
@@ -404,8 +402,6 @@ export async function placeOrder(order: iOrder) {
       orderedProducts: order.OrderedProducts,
     }),
   });
-  // console.log(event.data.object.customer_details.email, "gdje si poslo");
-  // console.log(error, data);
   if (error) {
     if (process.env.NODE_ENV === "development") {
       return redirect("http://localhost:3000/payment/cancel");

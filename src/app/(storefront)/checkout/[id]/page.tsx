@@ -33,7 +33,6 @@ import { usePathname } from "next/navigation";
 export default function CheckoutForm() {
   const pathname = usePathname();
   const lastPart = pathname.split("/").filter(Boolean).pop();
-  console.log(lastPart);
   const [lastResult, action] = useFormState(
     createShippingAddress.bind(null, lastPart),
     undefined

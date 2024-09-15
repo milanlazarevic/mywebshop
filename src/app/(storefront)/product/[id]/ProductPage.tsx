@@ -43,7 +43,6 @@ const ProductPage = ({
       // addItem.bind(null, data.id);
     }
   };
-  console.log(data.description);
   return (
     <>
       <LoginModal isOpen={isLoginModalOpen} setIsOpen={setIsLoginModalOpen} />

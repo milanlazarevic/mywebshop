@@ -13,7 +13,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.text();
     const signature = headers().get("stripe-signature") as string;
-    console.log("Opuco sam iz puske");
     if (!signature) {
       return new Response("Invalid signature!", { status: 400 });
     }
@@ -109,8 +108,6 @@ export async function POST(req: Request) {
             orderedProducts: createdOrder.OrderedProducts,
           }),
         });
-        console.log(event.data.object.customer_details.email, "gdje si poslo");
-        console.log(error, data);
         if (error) {
           return new Response(null, { status: 400 });
         }
